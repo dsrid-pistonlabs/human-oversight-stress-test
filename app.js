@@ -2,9 +2,9 @@ const ids=['volume','rate','reviewers','minutes','delay'];
 const presets={baseline:[10000,8,10,6,2],growth:[20000,8,10,6,2],caution:[10000,15,10,6,2],staff:[10000,8,16,6,2]};
 const $=id=>document.getElementById(id),fmt=n=>Math.round(n).toLocaleString('en-AU');
 function render(){const s=Object.fromEntries(ids.map(id=>[id,Number($(id).value)])),r=calculate(s);ids.forEach(id=>$(id+'Value').textContent=fmt(s[id])+(id==='rate'?'%':''));
-$('status').textContent=r.gap>0?'Demand exceeds review capacity':r.gap===0?'At capacity · no spare room':'Capacity available · effectiveness unproven';
-$('gap').textContent=fmt(Math.abs(r.gap));$('gapLabel').textContent=r.gap>0?'extra cases waiting each day':'reviews of spare capacity / day';
-$('interpretation').textContent=r.gap>0?'If every flagged action waits for approval, this queue grows even when the AI behaves exactly as designed.':r.gap===0?'Average demand exactly fills the team. There is no room for spikes, absences or more complex cases.':'The average workload fits. This does not establish that reviews are accurate, timely or independent.';
+$('status').textContent=r.gap>0?'The team is falling behind':r.gap===0?'The team has no spare capacity':'The workload fits';
+$('gap').textContent=fmt(Math.abs(r.gap));$('gapLabel').textContent=r.gap>0?'more cases left waiting / day':'reviews of spare capacity / day';
+$('interpretation').textContent=r.gap>0?fmt(r.demand)+' cases need a person each day. The team can review '+fmt(r.capacity)+'. The rest wait.':r.gap===0?'Average demand exactly fills the team. There is no room for spikes, absences or more complex cases.':'The average workload fits. This does not establish that reviews are accurate, timely or independent.';
 $('demand').textContent=fmt(r.demand);$('capacity').textContent=fmt(r.capacity);$('load').textContent=fmt(r.load)+'%';$('endQueue').textContent=fmt(r.queue[20])+' waiting on day 20';
 $('threshold').textContent=r.breach?'Backlog tolerance exceeded on working day '+r.breach+'.':'Selected backlog tolerance is not exceeded within 20 working days.';
 const ymax=Math.max(r.queue[20],r.tolerance)*1.18||1,x=d=>45+d*26.5,y=v=>165-v/ymax*140;
@@ -18,4 +18,4 @@ $('recommendation').textContent=r.gap>0?'Restrict volume or increase qualified r
 $('condition').textContent='At '+fmt(s.volume)+' decisions/day, '+s.rate+'% escalation and '+s.minutes+' minutes per review, '+s.reviewers+' reviewers provide '+fmt(r.capacity)+' reviews/day. Mathematical break-even: '+fmt(r.limit)+' decisions/day, or at least '+r.needed+' reviewers at the current volume. These are zero-buffer limits. Select a lower deployment ceiling after stress testing; monitor queue age as well as volume and trigger a named fallback before the chosen tolerance of '+s.delay+' working days of capacity is exceeded.';
 document.querySelectorAll('[data-preset]').forEach(b=>{const active=presets[b.dataset.preset].every((v,i)=>v===s[ids[i]]);b.classList.toggle('active',active);b.setAttribute('aria-pressed',active)});
 }
-ids.forEach(id=>$(id).addEventListener('input',render));document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{presets[b.dataset.preset].forEach((v,i)=>$(ids[i]).value=v);render()}));$('controls').addEventListener('submit',e=>e.preventDefault());$('print').addEventListener('click',()=>window.print());render();
+ids.forEach(id=>$(id).addEventListener('input',render));document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{presets[b.dataset.preset].forEach((v,i)=>$(ids[i]).value=v);render()}));$('controls').addEventListener('submit',e=>e.preventDefault());$('print').addEventListener('click',()=>{document.querySelectorAll('details').forEach(d=>d.open=true);window.print()});render();
